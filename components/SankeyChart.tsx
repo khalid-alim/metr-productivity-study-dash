@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { sankey, sankeyLinkHorizontal, sankeyLeft, SankeyGraph, SankeyNode as D3SankeyNode, SankeyLink as D3SankeyLink } from 'd3-sankey';
+import { sankey, sankeyLinkHorizontal, sankeyLeft, SankeyLink as D3SankeyLink } from 'd3-sankey';
 import type { SankeyData } from '@/lib/sankeyData';
 
 interface SankeyChartProps {
