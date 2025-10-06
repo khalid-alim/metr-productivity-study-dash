@@ -43,6 +43,13 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
 
     type ExtendedNode = { name: string; category: string; index: number; depth: number };
     type ExtendedLink = { source: string | number; target: string | number; value: number };
+    type SankeyNodeExtended = ExtendedNode & {
+      x0?: number;
+      x1?: number;
+      y0?: number;
+      y1?: number;
+      value?: number;
+    };
 
     const graphData: { nodes: ExtendedNode[]; links: ExtendedLink[] } = {
       nodes: data.nodes.map((d, i) => ({ 
@@ -80,10 +87,17 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
       return '#777777'; // neutral (Applications)
     };
 
-    type SankeyLinkExtended = D3SankeyLink<ExtendedNode, ExtendedLink> & { width?: number };
+    type SankeyLinkExtended = {
+      source: SankeyNodeExtended;
+      target: SankeyNodeExtended;
+      width?: number;
+      value?: number;
+      y0?: number;
+      y1?: number;
+    };
 
     const getLinkColor = (link: SankeyLinkExtended) => {
-      const targetName = typeof link.target === 'object' ? link.target.name : '';
+      const targetName = link.target.name || '';
       if (targetName === 'Closed/Rejected') return '#777777';
       if (targetName === 'Onboarded' || targetName === 'Call Completed') return '#1a4a5a';
       if (targetName === 'Waiting on Reply' || targetName === 'Call Upcoming' || targetName === 'Paused') return '#5a7a8a';
@@ -92,7 +106,7 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
     };
 
     const getLinkOpacity = (link: SankeyLinkExtended) => {
-      const targetName = typeof link.target === 'object' ? link.target.name : '';
+      const targetName = link.target.name || '';
       if (targetName === 'Closed/Rejected') return 0.20;
       if (targetName === 'Waiting on Reply' || targetName === 'Call Upcoming' || targetName === 'Unassessed') return 0.25;
       return 0.25;
@@ -179,7 +193,7 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
     // Positioned thoughtfully to avoid crossing paths
     const significantFlows = links.filter((d) => {
       const link = d as SankeyLinkExtended;
-      const targetName = typeof link.target === 'object' ? link.target.name : '';
+      const targetName = link.target.name || '';
       return (link.value || 0) >= 15 && targetName !== 'Closed/Rejected';
     });
     
