@@ -32,14 +32,6 @@ function timeAgo(dateString: string): string {
   return `${weeks}w ago`;
 }
 
-// Get start of current week (Monday)
-function getWeekStart(): Date {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = now.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-  return new Date(now.setDate(diff));
-}
-
 export default function Dashboard() {
   const [people, setPeople] = useState<Person[]>([]);
   const [events, setEvents] = useState<FunnelEvent[]>([]);
