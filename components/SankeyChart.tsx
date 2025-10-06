@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { sankey, sankeyLinkHorizontal, sankeyLeft, SankeyLink as D3SankeyLink } from 'd3-sankey';
+import { sankey, sankeyLinkHorizontal, sankeyLeft } from 'd3-sankey';
 import type { SankeyData } from '@/lib/sankeyData';
 
 interface SankeyChartProps {
@@ -203,11 +203,15 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
       .join('text')
       .attr('class', 'flow-value')
       .attr('x', d => {
-        const sourceX = d.source.x1 || 0;
-        const targetX = d.target.x0 || 0;
+        const link = d as SankeyLinkExtended;
+        const sourceX = link.source.x1 || 0;
+        const targetX = link.target.x0 || 0;
         return (sourceX + targetX) / 2;
       })
-      .attr('y', d => (d.y0 + d.y1) / 2)
+      .attr('y', d => {
+        const link = d as SankeyLinkExtended;
+        return ((link.y0 || 0) + (link.y1 || 0)) / 2;
+      })
       .attr('dy', '-4px')
       .attr('text-anchor', 'middle')
       .attr('font-family', 'Georgia, serif')
@@ -215,7 +219,7 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
       .attr('font-style', 'italic')
       .attr('font-variant-numeric', 'tabular-nums')
       .attr('fill', '#888')
-      .text(d => d.value);
+      .text(d => (d as SankeyLinkExtended).value || 0);
 
     // Tufte: Marginal annotations for key insights
     // Conversion rate from Applications to Qualified
