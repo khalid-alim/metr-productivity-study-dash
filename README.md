@@ -2,6 +2,22 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Environment Setup (Airtable)
+
+Create a `.env.local` file in the project root and set the following variables. You can duplicate these from your Airtable account and base:
+
+```bash
+# Airtable configuration
+AIRTABLE_ACCESS_TOKEN=your_airtable_pat_here
+AIRTABLE_BASE_ID=appfGnLBEP1dDQasz
+AIRTABLE_TABLE_NAME=People
+```
+
+Notes:
+- The `AIRTABLE_ACCESS_TOKEN` should be a Personal Access Token with read/write access to the base.
+- `AIRTABLE_BASE_ID` is the METR Productivity Study base.
+- `AIRTABLE_TABLE_NAME` should be `People`.
+
 First, run the development server:
 
 ```bash
