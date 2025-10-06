@@ -52,12 +52,8 @@ export default function Dashboard() {
           throw new Error('Failed to fetch data from Airtable');
         }
         
-        const peopleData = await peopleRes.json();
+        const peopleData: Person[] = await peopleRes.json();
         const eventsData: FunnelEvent[] = await eventsRes.json();
-        
-        if (peopleData.error || eventsData.error) {
-          throw new Error(peopleData.error || eventsData.error);
-        }
         
         setPeople(peopleData);
         setEvents(eventsData);
