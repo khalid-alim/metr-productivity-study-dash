@@ -12,7 +12,7 @@ interface Person {
   Email?: string;
   Role?: string;
   'Created': string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined;
 }
 
 // Helper function to format time ago
@@ -73,9 +73,10 @@ export default function Dashboard() {
         setLastUpdated(new Date());
         setError(null);
         setLoading(false);
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error loading data:', error);
-        setError(error.message || 'Failed to load data from Airtable');
+        const message = error instanceof Error ? error.message : 'Failed to load data from Airtable';
+        setError(message);
         setLoading(false);
       }
     };
@@ -112,38 +113,9 @@ export default function Dashboard() {
     return acc;
   }, {} as Record<string, number>);
 
-  const active = byStatus['Active'] || 0;
   const leads = byStatus['Lead'] || 0;
   const onboarded = byStatus['Onboarded'] || 0;
   const closed = byStatus['Closed'] || 0;
-  
-  // Calculate weekly metrics
-  const weekStart = getWeekStart();
-  const thisWeekPeople = people.filter(p => {
-    if (!p.Created) return false;
-    const created = new Date(p.Created);
-    return created >= weekStart;
-  });
-  
-  const weeklyApplications = thisWeekPeople.length;
-  const weeklyQualified = thisWeekPeople.filter(p => 
-    p.Status === 'Lead' || p.Status === 'Scheduling Email Sent' || 
-    p.Status === 'Call Scheduled' || p.Status === 'Call Completed' || 
-    p.Status === 'Onboarded'
-  ).length;
-  
-  // Get onboarded this week from events
-  const thisWeekOnboarded = events.filter(e => {
-    if (e['To Status'] !== 'Onboarded' || !e['Changed At']) return false;
-    const changed = new Date(e['Changed At']);
-    return changed >= weekStart;
-  }).length;
-  
-  // Calculate days remaining in week
-  const now = new Date();
-  const friday = new Date(weekStart);
-  friday.setDate(friday.getDate() + 4); // Friday
-  const daysRemaining = Math.max(0, Math.ceil((friday.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
   
   // Last application received
   const sortedPeople = [...people].sort((a, b) => {
@@ -157,17 +129,6 @@ export default function Dashboard() {
     .filter(e => e['To Status'] === 'Onboarded' && e['Changed At'])
     .sort((a, b) => new Date(b['Changed At']).getTime() - new Date(a['Changed At']).getTime());
   const lastOnboarded = onboardedEvents[0]?.['Changed At'] ? timeAgo(onboardedEvents[0]['Changed At']) : '—';
-
-  const statusDescriptions: Record<string, string> = {
-    'Lead': 'Reviewed GitHub; meets initial criteria. Starting point after form.',
-    'Scheduling email sent': 'Outreach sent to schedule a call.',
-    'Call scheduled': 'Intro or screening call is on the calendar.',
-    'Call completed': 'Initial call happened; evaluating fit.',
-    'Onboarded': 'Completed onboarding; access and materials provided.',
-    'Active': 'Joined Slack, contributing, or signed docs.',
-    'Paused': 'Temporarily on hold; may resume later.',
-    'Closed': 'Exited funnel; see closure reason.'
-  };
 
   // Close class breakdown
   const closedPeople = people.filter(p => p.Status === 'Closed');
@@ -208,7 +169,7 @@ export default function Dashboard() {
             </h2>
             <div className="space-y-2 text-gray-700">
               <div><span className="font-semibold text-gray-800">{total > 0 ? Math.round((closed / total) * 100) : 0}%</span> of applications rejected <span className="text-gray-400">({closed})</span></div>
-              <div><span className="font-semibold text-gray-800">{leads > 0 ? Math.round(((leads - onboarded) / leads) * 100) : 0}%</span> of qualified don't onboard <span className="text-gray-400">({leads - onboarded})</span></div>
+              <div><span className="font-semibold text-gray-800">{leads > 0 ? Math.round(((leads - onboarded) / leads) * 100) : 0}%</span> of qualified don&apos;t onboard <span className="text-gray-400">({leads - onboarded})</span></div>
               <div><span className="font-semibold text-gray-800">{byStatus['New'] || 0}</span> unassessed <span className="text-gray-400 italic">(pending)</span></div>
             </div>
           </div>

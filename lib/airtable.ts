@@ -30,7 +30,7 @@ export async function updatePersonStatus(recordId: string, status: string) {
   return { id: record.id, ...record.fields };
 }
 
-export async function updatePersonField(recordId: string, fieldName: string, value: any) {
+export async function updatePersonField(recordId: string, fieldName: string, value: string | number | boolean) {
   const record = await peopleTable.update(recordId, { [fieldName]: value });
   return { id: record.id, ...record.fields };
 }

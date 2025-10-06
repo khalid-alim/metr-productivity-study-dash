@@ -3,7 +3,7 @@ export interface Person {
   Name: string;
   Status: string;
   'Close Class'?: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined | string[];
 }
 
 export interface FunnelEvent {
@@ -12,7 +12,7 @@ export interface FunnelEvent {
   'To Status': string;
   'Changed At': string;
   Lead?: string[];
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined | string[];
 }
 
 export interface SankeyNode {
@@ -31,17 +31,17 @@ export interface SankeyData {
   links: SankeyLink[];
 }
 
-export function transformEventsToSankey(events: FunnelEvent[], people?: Person[]): SankeyData {
+export function transformEventsToSankey(_events: FunnelEvent[], people?: Person[]): SankeyData {
   // Use live Airtable data only - no fallback
   if (!people || people.length === 0) {
     throw new Error('No data available from Airtable');
   }
   
-  return transformLiveDataToSankey(people, events);
+  return transformLiveDataToSankey(people);
 }
 
 // Transform live Airtable data into Sankey format
-function transformLiveDataToSankey(people: Person[], events: FunnelEvent[]): SankeyData {
+function transformLiveDataToSankey(people: Person[]): SankeyData {
   // Count people currently in each status
   const statusCounts: Record<string, number> = {};
   people.forEach(person => {
@@ -65,7 +65,6 @@ function transformLiveDataToSankey(people: Person[], events: FunnelEvent[]): San
   ];
 
   // Get current counts for each status
-  const total = people.length;
   const unassessedCount = statusCounts['New'] || 0;
   const leadCount = statusCounts['Lead'] || 0;
   const schedulingCount = statusCounts['Scheduling Email Sent'] || 0;

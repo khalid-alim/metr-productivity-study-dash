@@ -12,7 +12,7 @@ interface Person {
   'GitHub Link'?: string;
   'Source/Channel'?: string;
   'Created': string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined | string[];
 }
 
 export default function TableView() {

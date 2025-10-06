@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { sankey, sankeyLinkHorizontal, sankeyLeft } from 'd3-sankey';
+import { sankey, sankeyLinkHorizontal, sankeyLeft, SankeyGraph, SankeyNode as D3SankeyNode, SankeyLink as D3SankeyLink } from 'd3-sankey';
 import type { SankeyData } from '@/lib/sankeyData';
 
 interface SankeyChartProps {
@@ -41,7 +41,10 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
       'Paused': 3,
     };
 
-    const graphData: any = {
+    type ExtendedNode = { name: string; category: string; index: number; depth: number };
+    type ExtendedLink = { source: string | number; target: string | number; value: number };
+
+    const graphData: { nodes: ExtendedNode[]; links: ExtendedLink[] } = {
       nodes: data.nodes.map((d, i) => ({ 
         ...d, 
         index: i,
@@ -54,8 +57,8 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
       }))
     };
 
-    const sankeyGenerator = sankey<any, any>()
-      .nodeId((d: any) => d.name)
+    const sankeyGenerator = sankey<ExtendedNode, ExtendedLink>()
+      .nodeId((d) => d.name)
       .nodeAlign(sankeyLeft)
       .nodeWidth(3) // Tufte: thin data-bearing line, slightly thicker for clarity
       .nodePadding(80) // Much more spacing between nodes to prevent visual overlap
@@ -77,39 +80,43 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
       return '#777777'; // neutral (Applications)
     };
 
-    const getLinkColor = (link: any) => {
-      if (link.target.name === 'Closed/Rejected') return '#777777';
-      if (link.target.name === 'Onboarded' || link.target.name === 'Call Completed') return '#1a4a5a';
-      if (link.target.name === 'Waiting on Reply' || link.target.name === 'Call Upcoming' || link.target.name === 'Paused') return '#5a7a8a';
-      if (link.target.name === 'Unassessed') return '#8a7a4a';
+    type SankeyLinkExtended = D3SankeyLink<ExtendedNode, ExtendedLink> & { width?: number };
+
+    const getLinkColor = (link: SankeyLinkExtended) => {
+      const targetName = typeof link.target === 'object' ? link.target.name : '';
+      if (targetName === 'Closed/Rejected') return '#777777';
+      if (targetName === 'Onboarded' || targetName === 'Call Completed') return '#1a4a5a';
+      if (targetName === 'Waiting on Reply' || targetName === 'Call Upcoming' || targetName === 'Paused') return '#5a7a8a';
+      if (targetName === 'Unassessed') return '#8a7a4a';
       return '#1a4a5a';
     };
 
-    const getLinkOpacity = (link: any) => {
-      if (link.target.name === 'Closed/Rejected') return 0.20;
-      if (link.target.name === 'Waiting on Reply' || link.target.name === 'Call Upcoming' || link.target.name === 'Unassessed') return 0.25;
+    const getLinkOpacity = (link: SankeyLinkExtended) => {
+      const targetName = typeof link.target === 'object' ? link.target.name : '';
+      if (targetName === 'Closed/Rejected') return 0.20;
+      if (targetName === 'Waiting on Reply' || targetName === 'Call Upcoming' || targetName === 'Unassessed') return 0.25;
       return 0.25;
     };
 
     // Draw links with category-based colors
-    const link = g.append('g')
+    g.append('g')
       .attr('fill', 'none')
       .selectAll('path')
       .data(links)
       .join('path')
-      .attr('d', sankeyLinkHorizontal() as any)
-      .attr('stroke', d => getLinkColor(d))
-      .attr('stroke-width', d => Math.max(1.5, d.width || 0)) // Minimum 1.5px for visibility
-      .attr('opacity', d => getLinkOpacity(d))
+      .attr('d', sankeyLinkHorizontal())
+      .attr('stroke', d => getLinkColor(d as SankeyLinkExtended))
+      .attr('stroke-width', d => Math.max(1.5, (d as SankeyLinkExtended).width || 0)) // Minimum 1.5px for visibility
+      .attr('opacity', d => getLinkOpacity(d as SankeyLinkExtended))
       .on('mouseover', function() {
         d3.select(this).attr('opacity', 0.40);
       })
-      .on('mouseout', function(event, d: any) {
-        d3.select(this).attr('opacity', getLinkOpacity(d));
+      .on('mouseout', function(event, d) {
+        d3.select(this).attr('opacity', getLinkOpacity(d as SankeyLinkExtended));
       });
 
     // Draw nodes as rectangles
-    const node = g.append('g')
+    g.append('g')
       .selectAll('rect')
       .data(nodes)
       .join('rect')
@@ -170,10 +177,11 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
 
     // Flow annotations - only for significant transitions (value ≥ 15)
     // Positioned thoughtfully to avoid crossing paths
-    const significantFlows = links.filter((d: any) => 
-      d.value >= 15 && 
-      d.target.name !== 'Closed/Rejected' // Don't label the rejection flow
-    );
+    const significantFlows = links.filter((d) => {
+      const link = d as SankeyLinkExtended;
+      const targetName = typeof link.target === 'object' ? link.target.name : '';
+      return (link.value || 0) >= 15 && targetName !== 'Closed/Rejected';
+    });
     
     g.append('g')
       .selectAll('text.flow-value')
