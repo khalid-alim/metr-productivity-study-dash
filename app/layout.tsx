@@ -13,11 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Uplift Study Developer Pipeline | METR",
-  description: "Real-time analytics dashboard tracking developer recruitment and onboarding for the Uplift Study. Visualizing progression from application to active contribution.",
+  title: "Developer Pipeline | Uplift Study",
+  description: "Developer recruitment funnel for the Uplift Study",
   openGraph: {
-    title: "Uplift Study Developer Pipeline",
-    description: "Real-time recruitment analytics dashboard",
+    title: "Developer Pipeline | Uplift Study",
+    description: "Developer recruitment funnel for the Uplift Study",
     type: "website",
   },
 };
