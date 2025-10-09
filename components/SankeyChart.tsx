@@ -226,7 +226,7 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
     const applicationsNode = nodes.find(n => n.name === 'Applications');
     const qualifiedNode = nodes.find(n => n.name === 'Qualified');
     
-    if (applicationsNode && qualifiedNode) {
+    if (applicationsNode && qualifiedNode && applicationsNode.value && qualifiedNode.value) {
       const conversionRate = Math.round((qualifiedNode.value / applicationsNode.value) * 100);
       
       g.append('text')
@@ -242,7 +242,7 @@ export default function SankeyChart({ data, width = 1400, height = 800 }: Sankey
     // Completion rate from Qualified to Onboarded
     const onboardedNode = nodes.find(n => n.name === 'Onboarded');
     
-    if (qualifiedNode && onboardedNode && onboardedNode.value > 0) {
+    if (qualifiedNode && onboardedNode && qualifiedNode.value && onboardedNode.value && onboardedNode.value > 0) {
       const completionRate = Math.round((onboardedNode.value / qualifiedNode.value) * 100);
       
       // Position annotation to the right of Onboarded node, not above it
