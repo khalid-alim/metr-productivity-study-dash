@@ -1,14 +1,32 @@
 import Airtable from 'airtable';
 
-const base = new Airtable({
-  apiKey: process.env.AIRTABLE_ACCESS_TOKEN
-}).base(process.env.AIRTABLE_BASE_ID!);
+// Lazy initialization to avoid build-time errors
+function getBase() {
+  if (!process.env.AIRTABLE_ACCESS_TOKEN) {
+    throw new Error('AIRTABLE_ACCESS_TOKEN is not set');
+  }
+  if (!process.env.AIRTABLE_BASE_ID) {
+    throw new Error('AIRTABLE_BASE_ID is not set');
+  }
+  
+  return new Airtable({
+    apiKey: process.env.AIRTABLE_ACCESS_TOKEN
+  }).base(process.env.AIRTABLE_BASE_ID);
+}
 
-export const peopleTable = base(process.env.AIRTABLE_TABLE_NAME!);
-export const funnelEventsTable = base('Funnel Events');
+function getPeopleTable() {
+  if (!process.env.AIRTABLE_TABLE_NAME) {
+    throw new Error('AIRTABLE_TABLE_NAME is not set');
+  }
+  return getBase()(process.env.AIRTABLE_TABLE_NAME);
+}
+
+function getFunnelEventsTable() {
+  return getBase()('Funnel Events');
+}
 
 export async function getAllPeople() {
-  const records = await peopleTable.select().all();
+  const records = await getPeopleTable().select().all();
   return records.map(record => ({
     id: record.id,
     ...record.fields
@@ -16,7 +34,7 @@ export async function getAllPeople() {
 }
 
 export async function getAllFunnelEvents() {
-  const records = await funnelEventsTable.select({
+  const records = await getFunnelEventsTable().select({
     sort: [{ field: 'Changed At', direction: 'asc' }]
   }).all();
   return records.map(record => ({
@@ -26,11 +44,11 @@ export async function getAllFunnelEvents() {
 }
 
 export async function updatePersonStatus(recordId: string, status: string) {
-  const record = await peopleTable.update(recordId, { Status: status });
+  const record = await getPeopleTable().update(recordId, { Status: status });
   return { id: record.id, ...record.fields };
 }
 
 export async function updatePersonField(recordId: string, fieldName: string, value: string | number | boolean) {
-  const record = await peopleTable.update(recordId, { [fieldName]: value });
+  const record = await getPeopleTable().update(recordId, { [fieldName]: value });
   return { id: record.id, ...record.fields };
 }
